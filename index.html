@@ -1,0 +1,355 @@
+
+<!DOCTYPE html>
+
+
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Python Memory Management and Weak References &mdash; Weak References 2014.03.10 documentation</title>
+    
+    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/styles.css" type="text/css" />
+    <link rel="stylesheet" href="_static/single.css" type="text/css" />
+    
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '2014.03.10',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/common.js"></script>
+    
+    <script type="text/javascript" src="_static/slides.js"></script>
+    <script type="text/javascript" src="_static/sync.js"></script>
+    <script type="text/javascript" src="_static/controller.js"></script>
+    <script type="text/javascript" src="_static/init.js"></script>
+    
+    
+    <link rel="top" title="Weak References 2014.03.10 documentation" href="#" /> 
+  </head>
+  <body>
+
+<section
+   id="slide_container"
+   class='slides layout-regular'>
+
+
+  
+<article class="slide level-1" id="python-memory-management-and-weak-references">
+
+<h1>Python Memory Management and Weak References</h1>
+
+<p>Contents:</p>
+<div class="toctree-wrapper compound">
+<ul class="simple">
+</ul>
+</div>
+
+
+
+
+</article>
+<article class="slide level-2" id="memory-management">
+
+<h2>Memory Management</h2>
+
+<blockquote>
+<div><ul class="simple">
+<li>You don't want python objects that are no longer in use taking up memory.</li>
+<li>You don't want to keep track of all that yourself.</li>
+<li>Most &quot;scripting languages&quot; or &quot;virtual machines&quot; have some sort of automated memory management</li>
+</ul>
+</div></blockquote>
+<p>Many ways to do &quot;Garbage collection&quot;</p>
+
+
+
+
+</article>
+<article class="slide level-2" id="reference-counting">
+
+<h2>Reference Counting</h2>
+
+<dl class="docutils">
+<dt>How memory is managed is not part of the Python Language spec:</dt>
+<dd><ul class="first last simple">
+<li>Jython uses the JVM</li>
+<li>Iron Python uses the CLR
+- Both are garbage collected</li>
+<li>PyPy uses: ????</li>
+</ul>
+</dd>
+<dt>The CPython interpreter uses a reference counting scheme:</dt>
+<dd><ul class="first last simple">
+<li>every time there is a new reference to a Python object, its reference count is increased</li>
+<li>every time a reference is deleted -- the count is decreased</li>
+<li>when the reference count goes to zero: the object is deleted (memory freed)</li>
+</ul>
+</dd>
+</dl>
+
+
+
+
+</article>
+<article class="slide level-2" id="what-makes-a-reference">
+
+<h2>What makes a reference?</h2>
+
+<ul>
+<li><p class="first">binding to a name:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">x</span> <span class="o">=</span> <span class="n">an_object</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">putting it in a container:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">l</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">an_object</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">passing it to a function:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">func</span><span class="p">(</span><span class="n">an_object</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+</ul>
+<p>Most of the time, you don't need to think about this at all.</p>
+
+
+
+
+</article>
+<article class="slide level-2" id="how-do-i-see-what-s-going-on">
+
+<h2>How do I see what's going on?</h2>
+
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">sys</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">getrefcount</span><span class="p">(</span><span class="nb">object</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>NOTE: This will always return one more than you'd expect, as passing the object to the function increases its refcount by one:</p>
+<div class="highlight-python"><pre>In [5]: a = []
+
+In [6]: sys.getrefcount(a)
+Out[6]: 2</pre>
+</div>
+<p>[The Heisenberg Uncertainty Principle: you can't observer it without altering it]</p>
+
+
+
+
+</article>
+<article class="slide level-2" id="playing-with-references">
+
+<h2>Playing with References</h2>
+
+<div class="highlight-python"><pre>In [5]: a = []
+
+    In [6]: sys.getrefcount(a)
+    Out[6]: 2
+
+    In [7]: a = []
+
+    In [8]: sys.getrefcount(a)
+    Out[8]: 2
+
+    In [9]: b = a
+
+    In [10]: sys.getrefcount(a)
+    Out[10]: 3
+
+    In [11]: l = [1,2,3,a]
+
+    In [12]: sys.getrefcount(a)
+    Out[12]: 4</pre>
+</div>
+
+
+
+
+</article>
+<article class="slide level-2" id="id1">
+
+<h2>Playing with References</h2>
+
+<div class="highlight-python"><pre>In [13]: del b
+
+In [14]: sys.getrefcount(a)
+Out[14]: 3
+
+
+In [15]: del l
+
+In [16]: sys.getrefcount(a)
+Out[16]: 2
+
+In [17]: def test(x):
+   ....:     print "x has a refcount of:", sys.getrefcount(x)
+   ....:
+
+In [18]: sys.getrefcount(a)
+Out[18]: 2
+
+In [19]: test(a)
+x has a refcount of: 4
+
+In [20]: sys.getrefcount(a)
+Out[20]: 2</pre>
+</div>
+
+
+
+
+</article>
+<article class="slide level-2" id="id2">
+
+<h2>Playing with References</h2>
+
+<div class="highlight-python"><pre>In [21]: x = 3
+
+In [22]: sys.getrefcount(x)
+Out[22]: 428</pre>
+</div>
+<p>WHOA!!</p>
+<p>(hint: interning....)</p>
+
+
+
+
+</article>
+<article class="slide level-2" id="the-power-of-reference-counting">
+
+<h2>The Power of Reference Counting</h2>
+
+<ul>
+<li><p class="first">You don't need to think about it most of the time.</p>
+</li>
+<li><p class="first">Code that creates objects doesn't need to delete them</p>
+</li>
+<li><dl class="first docutils">
+<dt>Objects get deleted right away</dt>
+<dd><p class="first last">. They get &quot;cleaned up&quot; (files, for instance)</p>
+</dd>
+</dl>
+</li>
+</ul>
+
+
+
+
+</article>
+<article class="slide level-2" id="the-limits-of-reference-counting">
+
+<h2>The Limits of Reference Counting</h2>
+
+<p>Circular references</p>
+
+
+
+
+</article>
+<article class="slide level-2" id="the-garbage-collector">
+
+<h2>The Garbage Collector</h2>
+
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">gc</span>
+</pre></div>
+</div>
+
+
+
+
+</article>
+<article class="slide level-2" id="example">
+
+<h2>Example</h2>
+
+<p>import sys
+import weakref
+import gc</p>
+<p>deleted_object_messages = []</p>
+<dl class="docutils">
+<dt>class MyChild(object):</dt>
+<dd><dl class="first last docutils">
+<dt>def __init__(self, parent):</dt>
+<dd>self.parent = weakref.proxy(parent)
+#self.parent = weakref.ref(parent)
+#self.parent = parent</dd>
+<dt>def __del__(self):</dt>
+<dd>deleted_object_messages.append( ('MyChild deleted', id(self)) )</dd>
+</dl>
+</dd>
+<dt>class MyParent(object):</dt>
+<dd><dl class="first last docutils">
+<dt>def __init__(self):</dt>
+<dd>self.my_children = []</dd>
+<dt>def addChild(self):</dt>
+<dd>child = MyChild(self)
+self.my_children.append(child)
+return child</dd>
+<dt>def __del__(self):</dt>
+<dd>deleted_object_messages.append( ('MyParent deleted', id(self)) )</dd>
+</dl>
+</dd>
+</dl>
+<p>p = MyParent()</p>
+<p>print &quot;refcount for p:&quot;, sys.getrefcount(p)
+assert sys.getrefcount(p) == 2</p>
+<p>a = p.addChild()
+a2 = p.addChild()
+print &quot;refcount for p after adding an two children:&quot;, sys.getrefcount(p)
+assert sys.getrefcount(p) == 2</p>
+<p>print &quot;p's children:&quot;, p.my_children
+assert len(p.my_children) == 2</p>
+<p>print &quot; a is:&quot;, a
+print &quot;a's parent:&quot;, a.parent
+print &quot;a's parent's children:&quot;, a.parent.my_children</p>
+<p>assert a  is a.parent.my_children[0]
+assert a2 is a.parent.my_children[1]</p>
+<p>print &quot;a's refcount:&quot;, sys.getrefcount(a)
+assert sys.getrefcount(a) == 3</p>
+<p>print &quot;a2's refcount:&quot;, sys.getrefcount(a2)
+assert sys.getrefcount(a2) == 3</p>
+<p>del p
+print &quot;after deleting p:&quot;</p>
+<p>print &quot;a's refcount:&quot;, sys.getrefcount(a)
+assert sys.getrefcount(a) == 2</p>
+<p>print &quot;a2's refcount:&quot;, sys.getrefcount(a2)
+assert sys.getrefcount(a2) == 2</p>
+<p>print &quot;deleting a:&quot;
+id_a = id(a)
+del a
+print deleted_object_messages
+assert deleted_object_messages[-1][0] == 'MyChild deleted'
+assert deleted_object_messages[-1][1] == id_a</p>
+<p>print &quot;deleting a2:&quot;
+id_a2 = id(a2)
+del a2
+print deleted_object_messages
+assert deleted_object_messages[-1][0] == 'MyChild deleted'
+assert deleted_object_messages[-1][1] == id_a2</p>
+
+
+
+
+</article>
+
+</section>
+
+<section id="slide_notes">
+
+</section>
+
+  </body>
+</html>
