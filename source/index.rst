@@ -153,6 +153,45 @@ The Limits of Reference Counting
 ==================================
 
 Circular references
+--------------------
+
+If a python object references another object that references the first object: You have a circular reference:
+
+::
+
+	In [11]: l1 = [1,]
+
+	In [12]: l2 = [2,]
+
+	In [13]: l1.append(l2)
+
+	In [14]: l2.append(l1)
+
+	In [15]: l1
+	Out[15]: [1, [2, [...]]]
+
+	In [16]: l2
+	Out[16]: [2, [1, [...]]]
+
+	In [17]: l1[1]
+	Out[17]: [2, [1, [...]]]
+
+	In [18]: l1[1][1]
+	Out[18]: [1, [2, [...]]]
+
+	In [19]: l1[1][1][1]
+	Out[19]: [2, [1, [...]]]
+
+	In [20]: l1[1][1][1][1]
+	Out[20]: [1, [2, [...]]]
+
+	In [21]: l1[1][1][1][1]
+	Out[21]: [1, [2, [...]]]
+
+	In [22]: sys.getrefcount(l1)
+	Out[22]: 15
+
+
 
 
 The Garbage Collector
