@@ -16,6 +16,10 @@ You can bulid the slides yourelf from the source, if you have installed hierogly
 
   pip install hieroglyph
 
+Then you should be able to buld the slides with::
+  make slides
+(run in the ``Refcount_lecture`` directory)
+
 The RST source for the slides are in::
 
   source/index.rst
