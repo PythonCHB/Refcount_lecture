@@ -22,10 +22,10 @@ class MyChild(object):
 
 class MyParent(object):
     def __init__(self):
-        self.my_children = []
+        self.children = []
     def addChild(self):
         child = MyChild(self)
-        self.my_children.append(child)
+        self.children.append(child)
         return child
     def __del__(self):
         deleted_object_messages.append( ('MyParent deleted', id(self)) )
@@ -42,15 +42,15 @@ if __name__ == "__main__":
     print "refcount for p after adding an two children:", sys.getrefcount(p)
     assert sys.getrefcount(p) == 2
 
-    print "p's children:", p.my_children
-    assert len(p.my_children) == 2
+    print "p's children:", p.children
+    assert len(p.children) == 2
 
     print " a is:", a
     print "a's parent:", a.parent
-    print "a's parent's children:", a.parent.my_children
+    print "a's parent's children:", a.parent.children
 
-    assert a  is a.parent.my_children[0]
-    assert a2 is a.parent.my_children[1]
+    assert a  is a.parent.children[0]
+    assert a2 is a.parent.children[1]
 
 
     print "a's refcount:", sys.getrefcount(a)
