@@ -2,7 +2,9 @@
 # -*- coding: utf-8 -*-
 
 """
-a simple test of a circular reference that gc.collect() will not clean up
+a simple test of a circular reference that gc.collect() will not clean up.
+
+And watch the memory grow!
 
 """
 
@@ -16,6 +18,7 @@ import mem_check
 class MyChild(object):
     def __init__(self, parent):
         self.parent = parent
+        # if a weak ref is used, then no memory leak.
         #self.parent = weakref.proxy(parent)
 
         ## store some data so it will use appreciable memory
