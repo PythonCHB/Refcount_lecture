@@ -7,10 +7,11 @@
 Python Memory Management and Weak References
 =============================================
 
-Contents:
+Chris Barker
 
-.. toctree::
-   :maxdepth: 2
+``PythonCHB@gmail.com``
+
+``https://github.com/PythonCHB``
 
 
 Memory Management
@@ -75,11 +76,6 @@ Playing with References
 
 ::
 
-    In [5]: a = []
-
-	In [6]: sys.getrefcount(a)
-	Out[6]: 2
-
 	In [7]: a = []
 
 	In [8]: sys.getrefcount(a)
@@ -110,6 +106,13 @@ Playing with References
 
 	In [16]: sys.getrefcount(a)
 	Out[16]: 2
+
+Playing with References
+========================
+
+::
+
+    # function local variables
 
 	In [17]: def test(x):
 	   ....:     print "x has a refcount of:", sys.getrefcount(x)
@@ -196,12 +199,25 @@ If a python object references another object that references the first object: Y
 The Garbage Collector
 ==================================
 
-::
+As of Python 2.0 -- a garbage collector was added.
 
-    import gc
+It can find and clean up "unreachable" references.
 
+It is turned on by default::
 
-Example
+	In [1]: import gc
+
+	In [2]: gc.isenabled()
+	Out[2]: True
+
+or you can force it::
+
+	In [4]: gc.collect()
+	Out[4]: 64
+
+But it can be slow, and doesn't always work!
+
+Examples
 ==========
 
 
@@ -217,5 +233,42 @@ And::
 
   memcount.py
 
-( ``mem_check.py`` is code that reports process memoryuse -- only *nix for now -- sorry! )
+``mem_check.py`` is code that reports process memory use
+  -- only *nix for now -- sorry!
+
+Weak References
+================
+
+For times when you don't want to keep objects alive, Python provides "weak references".
+
+You saw this in the examples.
+
+Three ways to use them:
+
+* The built-in containers:
+  - ``WeakKeyDictionary`` 
+  - ``WeakValueDictionary``
+  - ``WeakSet`` 
+
+* ``Proxy`` objects
+  - act much like regular references -- client code doesn't know the difference
+* ``WeakRef`` objects
+  - When you want to control what happens when the referenced object is gone.
+
+Exercise
+==========
+
+Build a "weak cache":
+
+For large objects that are expensive to create:
+
+* Use a WeakValueDictionay to hold references to (probably large) objects.
+
+* When the client requests an object that doesn't exist -- one is created, returned, and cached (weakly).
+
+* If the object is in the cache, it is returned.
+
+* when not other references exist to the object, it is NOT retained by the cache.
+
+
 

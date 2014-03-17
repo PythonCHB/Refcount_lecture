@@ -50,11 +50,9 @@
 
 <h1>Python Memory Management and Weak References</h1>
 
-<p>Contents:</p>
-<div class="toctree-wrapper compound">
-<ul class="simple">
-</ul>
-</div>
+<p>Chris Barker</p>
+<p><tt class="docutils literal"><span class="pre">PythonCHB&#64;gmail.com</span></tt></p>
+<p><tt class="docutils literal"><span class="pre">https://github.com/PythonCHB</span></tt></p>
 
 
 
@@ -154,25 +152,20 @@ Out[6]: 2</pre>
 
 <h2>Playing with References</h2>
 
-<div class="highlight-python"><pre>In [5]: a = []
+<div class="highlight-python"><pre>In [7]: a = []
 
-    In [6]: sys.getrefcount(a)
-    Out[6]: 2
+In [8]: sys.getrefcount(a)
+Out[8]: 2
 
-    In [7]: a = []
+In [9]: b = a
 
-    In [8]: sys.getrefcount(a)
-    Out[8]: 2
+In [10]: sys.getrefcount(a)
+Out[10]: 3
 
-    In [9]: b = a
+In [11]: l = [1,2,3,a]
 
-    In [10]: sys.getrefcount(a)
-    Out[10]: 3
-
-    In [11]: l = [1,2,3,a]
-
-    In [12]: sys.getrefcount(a)
-    Out[12]: 4</pre>
+In [12]: sys.getrefcount(a)
+Out[12]: 4</pre>
 </div>
 
 
@@ -192,20 +185,7 @@ Out[14]: 3
 In [15]: del l
 
 In [16]: sys.getrefcount(a)
-Out[16]: 2
-
-In [17]: def test(x):
-   ....:     print "x has a refcount of:", sys.getrefcount(x)
-   ....:
-
-In [18]: sys.getrefcount(a)
-Out[18]: 2
-
-In [19]: test(a)
-x has a refcount of: 4
-
-In [20]: sys.getrefcount(a)
-Out[20]: 2</pre>
+Out[16]: 2</pre>
 </div>
 
 
@@ -213,6 +193,30 @@ Out[20]: 2</pre>
 
 </article>
 <article class="slide level-2" id="id2">
+
+<h2>Playing with References</h2>
+
+<div class="highlight-python"><pre># function local variables
+
+    In [17]: def test(x):
+       ....:     print "x has a refcount of:", sys.getrefcount(x)
+       ....:
+
+    In [18]: sys.getrefcount(a)
+    Out[18]: 2
+
+    In [19]: test(a)
+    x has a refcount of: 4
+
+    In [20]: sys.getrefcount(a)
+    Out[20]: 2</pre>
+</div>
+
+
+
+
+</article>
+<article class="slide level-2" id="id3">
 
 <h2>Playing with References</h2>
 
@@ -304,17 +308,27 @@ Out[22]: 15</pre>
 
 <h2>The Garbage Collector</h2>
 
-<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">gc</span>
-</pre></div>
+<p>As of Python 2.0 -- a garbage collector was added.</p>
+<p>It can find and clean up &quot;unreachable&quot; references.</p>
+<p>It is turned on by default:</p>
+<div class="highlight-python"><pre>In [1]: import gc
+
+In [2]: gc.isenabled()
+Out[2]: True</pre>
 </div>
+<p>or you can force it:</p>
+<div class="highlight-python"><pre>In [4]: gc.collect()
+Out[4]: 64</pre>
+</div>
+<p>But it can be slow, and doesn't always work!</p>
 
 
 
 
 </article>
-<article class="slide level-2" id="example">
+<article class="slide level-2" id="examples">
 
-<h2>Example</h2>
+<h2>Examples</h2>
 
 <p>Example in iPython notebook:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">code</span><span class="o">/</span><span class="n">CircularReferenceExample</span><span class="o">.</span><span class="n">ipynb</span>
@@ -328,7 +342,49 @@ Out[22]: 15</pre>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">memcount</span><span class="o">.</span><span class="n">py</span>
 </pre></div>
 </div>
-<p>( <tt class="docutils literal"><span class="pre">mem_check.py</span></tt> is code that reports process memoryuse -- only <a href="#id3"><span class="problematic" id="id4">*</span></a>nix for now -- sorry! )</p>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">mem_check.py</span></tt> is code that reports process memory use</dt>
+<dd>-- only <a href="#id4"><span class="problematic" id="id5">*</span></a>nix for now -- sorry!</dd>
+</dl>
+
+
+
+
+</article>
+<article class="slide level-2" id="weak-references">
+
+<h2>Weak References</h2>
+
+<p>For times when you don't want to keep objects alive, Python provides &quot;weak references&quot;.</p>
+<p>You saw this in the examples.</p>
+<p>Three ways to use them:</p>
+<ul class="simple">
+<li>The built-in containers:
+- <tt class="docutils literal"><span class="pre">WeakKeyDictionary</span></tt>
+- <tt class="docutils literal"><span class="pre">WeakValueDictionary</span></tt>
+- <tt class="docutils literal"><span class="pre">WeakSet</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">Proxy</span></tt> objects
+- act much like regular references -- client code doesn't know the difference</li>
+<li><tt class="docutils literal"><span class="pre">WeakRef</span></tt> objects
+- When you want to control what happens when the referenced object is gone.</li>
+</ul>
+
+
+
+
+</article>
+<article class="slide level-2" id="exercise">
+
+<h2>Exercise</h2>
+
+<p>Build a &quot;weak cache&quot;:</p>
+<p>For large objects that are expensive to create:</p>
+<ul class="simple">
+<li>Use a WeakValueDictionay to hold references to (probably large) objects.</li>
+<li>When the client requests an object that doesn't exist -- one is created, returned, and cached (weakly).</li>
+<li>If the object is in the cache, it is returned.</li>
+<li>when not other references exist to the object, it is NOT retained by the cache.</li>
+</ul>
 
 
 
